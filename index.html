@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>総合適職診断フローチャート</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .flowchart {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            position: relative;
+        }
+
+        .node {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            max-width: 90vw;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            position: relative;
+            transform: translateY(20px);
+            opacity: 0;
+            animation: nodeAppear 0.8s ease-out forwards;
+            margin: 0 auto;
+            touch-action: manipulation;
+        }
+
+        .node:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+        }
+
+        .node:active {
+            transform: translateY(0px);
+        }
+
+        .node.start {
+            background: linear-gradient(135deg, #ff6b6b, #ffa726);
+            color: white;
+            animation-delay: 0.2s;
+        }
+
+        .node.question {
+            background: linear-gradient(135deg, #4fc3f7, #29b6f6);
+            color: white;
+            animation-delay: 0.4s;
+        }
+
+        .node.result {
+            background: linear-gradient(135deg, #66bb6a, #4caf50);
+            color: white;
+            animation-delay: 0.6s;
+            display: none;
+            max-width: 95vw;
+            width: 100%;
+        }
+
+        .node.active {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255,255,255,0.5);
+        }
+
+        .node-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block;
+            animation: bounce 2s infinite;
+        }
+
+        .node h3 {
+            font-size: 1.3rem;
+            margin-bottom: 12px;
+            line-height: 1.3;
+        }
+
+        .node p {
+            font-size: 0.95rem;
+            line-height: 1.4;
+            margin-bottom: 18px;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .option-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            backdrop-filter: blur(10px);
+            text-align: left;
+            line-height: 1.4;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .option-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.02);
+        }
+
+        .option-btn:active {
+            background: rgba(255,255,255,0.4);
+            transform: scale(0.98);
+        }
+
+        .arrow {
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 20px solid white;
+            animation: pulse 2s infinite;
+            opacity: 0.7;
+        }
+
+        .connection-line {
+            width: 3px;
+            height: 50px;
+            background: linear-gradient(to bottom, white, transparent);
+            opacity: 0.5;
+            animation: lineGlow 3s infinite;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b6b, #ffa726);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 3px;
+        }
+
+        .reset-btn {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            z-index: 1000;
+        }
+
+        .reset-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: rotate(360deg);
+        }
+
+        .reset-btn:active {
+            transform: scale(0.9);
+        }
+
+        .career-result {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .career-card {
+            background: white;
+            border-radius: 15px;
+            padding: 18px;
+            text-align: center;
+            transform: translateY(20px);
+            opacity: 0;
+            animation: slideUp 0.6s ease-out forwards;
+            color: #333;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .career-card h4 {
+            color: #4a90e2;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+
+        .career-card .icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .career-card .category {
+            background: #f0f0f0;
+            color: #666;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+
+        .match-score {
+            background: linear-gradient(135deg, #4caf50, #66bb6a);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-top: 10px;
+            display: inline-block;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes nodeAppear {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.7;
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.1);
+            }
+        }
+
+        @keyframes lineGlow {
+            0%, 100% {
+                opacity: 0.3;
+            }
+            50% {
+                opacity: 0.8;
+            }
+        }
+
+        @keyframes slideUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+                margin-bottom: 8px;
+            }
+
+            .header p {
+                font-size: 1rem;
+            }
+            
+            .node {
+                padding: 18px;
+                border-radius: 16px;
+            }
+            
+            .node-icon {
+                font-size: 2.2rem;
+                margin-bottom: 12px;
+            }
+
+            .node h3 {
+                font-size: 1.2rem;
+                margin-bottom: 10px;
+            }
+
+            .node p {
+                font-size: 0.9rem;
+                margin-bottom: 15px;
+            }
+
+            .options {
+                gap: 10px;
+                margin-top: 15px;
+            }
+
+            .option-btn {
+                padding: 14px 16px;
+                font-size: 0.85rem;
+                min-height: 55px;
+                border-radius: 20px;
+            }
+            
+            .career-result {
+                gap: 12px;
+                margin-top: 20px;
+            }
+
+            .career-card {
+                padding: 15px;
+            }
+
+            .career-card h4 {
+                font-size: 1.1rem;
+                margin-bottom: 8px;
+            }
+
+            .career-card p {
+                font-size: 0.85rem;
+            }
+
+            .career-card .icon {
+                font-size: 2rem;
+                margin-bottom: 10px;
+            }
+
+            .connection-line {
+                height: 30px;
+            }
+
+            .arrow {
+                border-left: 12px solid transparent;
+                border-right: 12px solid transparent;
+                border-top: 16px solid white;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 3px;
+            }
+
+            .header {
+                margin-bottom: 25px;
+            }
+
+            .header h1 {
+                font-size: 1.6rem;
+                margin-bottom: 6px;
+            }
+
+            .header p {
+                font-size: 0.9rem;
+            }
+            
+            .node {
+                padding: 15px;
+                border-radius: 14px;
+            }
+
+            .node-icon {
+                font-size: 2rem;
+                margin-bottom: 10px;
+            }
+
+            .node h3 {
+                font-size: 1.1rem;
+                margin-bottom: 8px;
+            }
+
+            .node p {
+                font-size: 0.85rem;
+                margin-bottom: 12px;
+            }
+            
+            .options {
+                gap: 8px;
+                margin-top: 12px;
+            }
+            
+            .option-btn {
+                padding: 12px 14px;
+                font-size: 0.8rem;
+                min-height: 50px;
+                border-radius: 18px;
+            }
+
+            .career-card {
+                padding: 12px;
+            }
+
+            .career-card h4 {
+                font-size: 1rem;
+                margin-bottom: 6px;
+            }
+
+            .career-card p {
+                font-size: 0.8rem;
+                line-height: 1.3;
+            }
+
+            .career-card .icon {
+                font-size: 1.8rem;
+                margin-bottom: 8px;
+            }
+
+            .career-card .category {
+                font-size: 0.7rem;
+                padding: 3px 8px;
+                margin-bottom: 8px;
+            }
+
+            .match-score {
+                padding: 6px 12px;
+                font-size: 0.8rem;
+                margin-top: 8px;
+            }
+
+            .reset-btn {
+                top: 10px;
+                right: 10px;
+                width: 45px;
+                height: 45px;
+                font-size: 1.1rem;
+                padding: 10px;
+            }
+
+            .progress-bar {
+                margin-bottom: 20px;
+            }
+
+            .connection-line {
+                height: 25px;
+            }
+
+            .arrow {
+                border-left: 10px solid transparent;
+                border-right: 10px solid transparent;
+                border-top: 14px solid white;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .header h1 {
+                font-size: 1.4rem;
+            }
+
+            .header p {
+                font-size: 0.85rem;
+            }
+
+            .node {
+                padding: 12px;
+            }
+
+            .node h3 {
+                font-size: 1rem;
+            }
+
+            .node p {
+                font-size: 0.8rem;
+            }
+
+            .option-btn {
+                padding: 10px 12px;
+                font-size: 0.75rem;
+                min-height: 45px;
+            }
+        }
+
+        /* タッチデバイス用の調整 */
+        @media (hover: none) and (pointer: coarse) {
+            .node:hover {
+                transform: translateY(0px);
+                box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            }
+
+            .option-btn:hover {
+                background: rgba(255,255,255,0.2);
+                transform: scale(1);
+            }
+
+            .reset-btn:hover {
+                background: rgba(255,255,255,0.2);
+                transform: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="reset-btn" onclick="resetTest()" title="テストをリセット">🔄</button>
+    
+    <div class="container">
+        <div class="header">
+            <h1>🌟 総合適職診断フローチャート 🌟</h1>
+            <p>50以上の職業から、あなたにぴったりの仕事を見つけましょう！</p>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="flowchart" id="flowchart">
+            <!-- スタートノード -->
+            <div class="node start active" id="start">
+                <span class="node-icon">🚀</span>
+                <h3>総合適職診断を始めましょう！</h3>
+                <p>7つの質問に答えて、50以上の職業からあなたの理想的な職業を見つけましょう。</p>
+                <div class="options">
+                    <button class="option-btn" onclick="nextQuestion('q1')">📋 診断を開始する</button>
+                </div>
+            </div>
+
+            <div class="connection-line"></div>
+            <div class="arrow"></div>
+
+            <!-- 質問1: 興味・関心分野 -->
+            <div class="node question" id="q1" style="display: none;">
+                <span class="node-icon">💡</span>
+                <h3>どの分野に最も興味がありますか？</h3>
+                <p>あなたが自然と惹かれる分野を選んでください。</p>
+                <div class="options">
+                    <button class="option-btn" onclick="setAnswer('interest', 'technology'); nextQuestion('q2')">
+                        💻 テクノロジー・IT・システム開発
+                    </button>
+                    <button class="option-btn" onclick="setAnswer('interest', 'people'); nextQuestion('q2')">
+                        👥 人とのコミュニケーション・サービス
+                    </button>
+                    <button class="option-btn" onclick="setAnswer('interest', 'creative'); nextQuestion('q2')">
+                        🎨 クリエイティブ・芸術・表現
+                    </button>
+                    <button class="option-btn" onclick="setAnswer('interest', 'health'); nextQuestion('q2')">
+                        🏥 医療・健康・福祉・ケア
+                    </button>
+                    <button class="option-btn" onclick="setAnswer('interest', 'business'); nextQuestion('q2')">
+                        📈 ビジネス・経営・金融
+                    </button>
+                    <button class="option-btn" onclick="setAnswer('interest', 'education'); nextQuestion('q2')">
+                        📚 教育・研究・知識の伝達
+                    </button>
+                </div>
+            </div>
+
+            <div class="connection-line"></div>
+            <div class="arrow"></div>
+
+            <!-- 質問2: 性格タイプ -->
+            <div class="node question" id="q2" style="display: none;">
+                <span class="node-icon">🧠</span>
+                <h3>あなたの性格タイプは？</h3>
+                <p>エネルギーの源泉について教えてください。</p>
+                <div class="options">
+                    <button class="option-btn" onclick="setAnswer('personality', 'introvert'); nextQuestion('q3')">
+                        🏠 一人の時間でエネルギーを回復し、深く考えることが好き
+                    </button>
+                    <button class="option-btn" onclick="setAnswer('personality', 'extrovert'); nextQuestion('q3')">
+                        👥 人との交流でエネルギーを得て、積極的に関わりたい
+                    </button>
+                    <button class="option-btn" onclick="setAnswer('personality', 'balanced'); nextQuestion('q3')">
+                        ⚖️ 状況に応じて一人の時間と人との時間を使い分ける
+                    </button>
+                </div>
+            </div>
+
+            <div class="connection-line"></div>
+            <div class="arrow"></div>
+
+            <!-- 質問3: 問題解決スタイル -->
+            <div class="node question" id="q3" style="display: none;">
+                <span class="node-icon">🔍</span>
+                <h3>問題解決のアプローチは？</h3>
+                <p>困難な課題に直面した時の対処法は？</p>
+                <div class="options">
+                    <button class="option-btn" onclick="setAnswer('problem_solving', 'analytical'); nextQuestion('q4')">
+                        📊 データや論理を重視して体系的に分析する
+                    </button>
+                    <button class="option-btn" onclick="setAnswer('problem_solving', 'creative'); nextQuestion('q4')">
+                        💡 直感やアイデアを活かして創造的に解決する
+                    </button>
+                    <button class="option-btn" onclick="setAnswer('problem_solving', 'practical'); nextQuestion('q4')">
+                        🔧 実践的で効率的な方法を重視する
+                    </button>
+                    <button class="option-btn" onclick="setAnswer('problem_solving', 'collaborative'); nextQuestion('q4')">
+                        🤝 チームと協力して多角的に取り組む
+                    </button>
+                </div>
+            </div>
+
+            <div class="connection-line"></div>
+            <div class="arrow"></div>
+
+            <!-- 質問4: 仕事環境の好み -->
+            <div class="node question" id="q4" style="display: none;">
+                <span class="node-icon">🏢</span>
+                <h3>理想の仕事環境は？</h3>
+                <p>どんな環境で働きたいですか？</p>
+                <div class="options">
+                    <button class="option-btn" onclick="setAnswer('environment', 'office'); nextQuestion('q5')">
+                        🏢 オフィスや組織内で安定した環境
+                    </button>
+                    <button class="option-btn" onclick="setAnswer('environment', 'fieldwork'); nextQuestion('q5')">
+                        🌍 現場や外部で動き回る活動的な環境
+                    </button>
+                    <button class="option-btn" onclick="setAnswer('environment', 'remote'); nextQuestion('q5')">
+                        🏠 自宅やリモートでの柔軟な働き方
+                    </button>
+                    <button class="option-btn" onclick="setAnswer('environment', 'specialized'); nextQuestion('q5')">
+                        🔬 専門的な設備や施設での集中した環境
+                    </button>
+                </div>
+            </div>
+
+            <div class="connection-line"></div>
+            <div class="arrow"></div>
+
+            <!-- 質問5: 価値観・動機 -->
+            <div class="node question" id="q5" style="display: none;">
+                <span class="node-icon">⭐</span>
+                <h3>仕事で最も重視するものは？</h3>
+                <p>あなたの価値観に最も近いものを選んでください。</p>
+                <div class="options">
+                    <button class="option-btn" onclick="setAnswer('values', 'stability'); nextQuestion('q6')">
+                        🛡️ 安定した収入と雇用の保障
+                    </button>
+                    <button class="option-btn" onclick="setAnswer('values', 'growth'); nextQuestion('q6')">
+                        📈 成長とキャリアアップの機会
+                    </button>
+                    <button class="option-btn" onclick="setAnswer('values', 'impact'); nextQuestion('q6')">
+                        🌍 社会への貢献と意義のある仕事
+                    </button>
+                    <button class="option-btn" onclick="setAnswer('values', 'creativity'); nextQuestion('q6')">
+                        🎨 創造性と自己表現の機会
+                    </button>
+                    <button class="option-btn" onclick="setAnswer('values', 'autonomy'); nextQuestion('q6')">
+                        🗽 自由度と裁量権の大きい仕事
+                    </button>
+                </div>
+            </div>
+
+            <div class="connection-line"></div>
+            <div class="arrow"></div>
+
+            <!-- 質問6: 働き方のスタイル -->
+            <div class="node question" id="q6" style="display: none;">
+                <span class="node-icon">⚙️</span>
+                <h3>理想の働き方は？</h3>
+                <p>どのような役割で力を発揮したいですか？</p>
+                <div class="options">
+                    <button class="option-btn" onclick="setAnswer('workstyle', 'specialist'); nextQuestion('q7')">
+                        🎯 専門分野のスペシャリストとして深く追求
+                    </button>
+                    <button class="option-btn" onclick="setAnswer('workstyle', 'generalist'); nextQuestion('q7')">
+                        🌟 幅広い業務に対応するゼネラリスト
+                    </button>
+                    <button class="option-btn" onclick="setAnswer('workstyle', 'leader'); nextQuestion('q7')">
+                        👑 チームやプロジェクトのリーダー
+                    </button>
+                    <button class="option-btn" onclick="setAnswer('workstyle', 'supporter'); nextQuestion('q7')">
+                        🤲 他者をサポートし支える役割
+                    </button>
+                </div>
+            </div>
+
+            <div class="connection-line"></div>
+            <div class="arrow"></div>
+
+            <!-- 質問7: ストレス耐性・プレッシャー -->
+            <div class="node question" id="q7" style="display: none;">
+                <span class="node-icon">💪</span>
+                <h3>プレッシャーや締切についてどう思いますか？</h3>
+                <p>ストレスの多い状況での働き方について教えてください。</p>
+                <div class="options">
+                    <button class="option-btn" onclick="setAnswer('stress', 'high_pressure'); showResult()">
+                        🔥 プレッシャーや締切があると力を発揮できる
+                    </button>
+                    <button class="option-btn" onclick="setAnswer('stress', 'moderate'); showResult()">
+                        ⚖️ 適度な緊張感があると良いパフォーマンスが出せる
+                    </button>
+                    <button class="option-btn" onclick="setAnswer('stress', 'low_pressure'); showResult()">
+                        🌱 穏やかで余裕のある環境で力を発揮する
+                    </button>
+                </div>
+            </div>
+
+            <div class="connection-line"></div>
+            <div class="arrow"></div>
+
+            <!-- 結果表示 -->
+            <div class="node result" id="result">
+                <span class="node-icon">🎉</span>
+                <h3>あなたの適職診断結果</h3>
+                <p>あなたの特性に基づいたおすすめの職業です！</p>
+                <div class="career-result" id="careerResult">
+                    <!-- 結果がここに動的に表示されます -->
+                </div>
+                <div class="options" style="margin-top: 30px;">
+                    <button class="option-btn" onclick="resetTest()">🔄 もう一度診断する</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let answers = {};
+        let currentQuestion = 0;
+        const totalQuestions = 7;
+
+        function setAnswer(category, value) {
+            answers[category] = value;
+            console.log('現在の回答:', answers);
+        }
+
+        function nextQuestion(questionId) {
+            // 現在のアクティブノードを非アクティブに
+            document.querySelector('.node.active').classList.remove('active');
+            
+            // 前の質問を隠す
+            const currentNodes = document.querySelectorAll('.node:not([style*="display: none"])');
+            currentNodes.forEach(node => {
+                if (node.id !== questionId) {
+                    node.style.display = 'none';
+                }
+            });
+
+            // 次の質問を表示
+            const nextNode = document.getElementById(questionId);
+            nextNode.style.display = 'block';
+            nextNode.classList.add('active');
+
+            // プログレスバーを更新
+            currentQuestion++;
+            updateProgress();
+
+            // スムーズスクロール（モバイル対応）
+            setTimeout(() => {
+                nextNode.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center',
+                    inline: 'nearest'
+                });
+            }, 100);
+        }
+
+        function updateProgress() {
+            const progress = (currentQuestion / totalQuestions) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        function showResult() {
+            currentQuestion = totalQuestions;
+            updateProgress();
+
+            // 現在のアクティブノードを非アクティブに
+            document.querySelector('.node.active').classList.remove('active');
+            
+            // 前の質問を隠す
+            document.getElementById('q7').style.display = 'none';
+
+            // 結果を計算
+            const careers = calculateCareer();
+            
+            // 結果を表示
+            const resultNode = document.getElementById('result');
+            const careerResultDiv = document.getElementById('careerResult');
+            
+            careerResultDiv.innerHTML = careers.map((career, index) => `
+                <div class="career-card" style="animation-delay: ${index * 0.2}s">
+                    <span class="category">${career.category}</span>
+                    <span class="icon">${career.icon}</span>
+                    <h4>${career.title}</h4>
+                    <p>${career.description}</p>
+                    <div class="match-score">適合度: ${career.match}%</div>
+                </div>
+            `).join('');
+
+            resultNode.style.display = 'block';
+            resultNode.classList.add('active');
+            
+            // モバイル対応のスクロール
+            setTimeout(() => {
+                resultNode.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center',
+                    inline: 'nearest'
+                });
+            }, 300);
+        }
+
+        function calculateCareer() {
+            const { interest, personality, problem_solving, environment, values, workstyle, stress } = answers;
+            
+            const careerDatabase = [
+                // IT・技術系
+                {
+                    title: "ソフトウェアエンジニア",
+                    icon: "💻",
+                    description: "システムやアプリケーションを設計・開発し、技術的な課題を解決",
+                    category: "IT・技術",
+                    traits: { technology: 9, introvert: 7, analytical: 9, office: 7, growth: 8, specialist: 9, moderate: 7 }
+                },
+                {
+                    title: "データサイエンティスト",
+                    icon: "📊",
+                    description: "ビッグデータを分析して価値ある洞察とビジネス解決策を提供",
+                    category: "IT・技術",
+                    traits: { technology: 8, introvert: 8, analytical: 9, office: 8, growth: 9, specialist: 9, moderate: 8 }
+                },
+                {
+                    title: "AIエンジニア",
+                    icon: "🤖",
+                    description: "人工知能や機械学習システムの開発と最適化を担当",
+                    category: "IT・技術",
+                    traits: { technology: 9, introvert: 7, analytical: 9, specialized: 8, growth: 9, specialist: 9, high_pressure: 7 }
+                },
+                {
+                    title: "Webデザイナー",
+                    icon: "🌐",
+                    description: "ユーザビリティと美しさを兼備したWebサイトをデザイン",
+                    category: "クリエイティブ・IT",
+                    traits: { creative: 8, technology: 7, creative: 8, remote: 8, creativity: 9, specialist: 7, moderate: 8 }
+                },
+                {
+                    title: "ネットワークエンジニア",
+                    icon: "🔗",
+                    description: "企業のネットワークインフラの設計・構築・運用を担当",
+                    category: "IT・技術",
+                    traits: { technology: 8, introvert: 6, practical: 8, office: 7, stability: 8, specialist: 8, moderate: 7 }
+                },
+                
+                // 医療・健康・福祉系
+                {
+                    title: "医師",
+                    icon: "👨‍⚕️",
+                    description: "患者の診察・治療を行い、人々の健康と生命を守る",
+                    category: "医療・健康",
+                    traits: { health: 9, extrovert: 7, analytical: 8, specialized: 9, impact: 9, specialist: 9, high_pressure: 9 }
+                },
+                {
+                    title: "看護師",
+                    icon: "👩‍⚕️",
+                    description: "患者の看護とケアを通じて回復をサポート",
+                    category: "医療・健康",
+                    traits: { health: 9, extrovert: 8, collaborative: 8, specialized: 8, impact: 9, supporter: 9, high_pressure: 8 }
+                },
+                {
+                    title: "薬剤師",
+                    icon: "💊",
+                    description: "薬の調剤と服薬指導で患者の治療をサポート",
+                    category: "医療・健康",
+                    traits: { health: 8, balanced: 7, analytical: 8, specialized: 8, impact: 8, specialist: 8, moderate: 7 }
+                },
+                {
+                    title: "理学療法士",
+                    icon: "🏃‍♂️",
+                    description: "運動療法で患者の身体機能回復をサポート",
+                    category: "医療・健康",
+                    traits: { health: 9, extrovert: 7, practical: 8, specialized: 8, impact: 9, supporter: 8, moderate: 7 }
+                },
+                {
+                    title: "保育士",
+                    icon: "👶",
+                    description: "子どもたちの成長と発達をサポートし、安全な環境を提供",
+                    category: "教育・福祉",
+                    traits: { people: 8, extrovert: 9, collaborative: 8, specialized: 7, impact: 9, supporter: 9, moderate: 6 }
+                },
+                {
+                    title: "介護福祉士",
+                    icon: "🤝",
+                    description: "高齢者や障害者の日常生活をサポート",
+                    category: "医療・福祉",
+                    traits: { health: 8, extrovert: 8, collaborative: 7, specialized: 7, impact: 9, supporter: 9, low_pressure: 8 }
+                },
+                
+                // 教育・研究系
+                {
+                    title: "教師",
+                    icon: "👩‍🏫",
+                    description: "知識と技能を次世代に伝え、人格形成をサポート",
+                    category: "教育",
+                    traits: { education: 9, extrovert: 8, collaborative: 8, specialized: 8, impact: 9, supporter: 8, moderate: 7 }
+                },
+                {
+                    title: "研究員",
+                    icon: "🔬",
+                    description: "専門分野の研究を通じて新しい知見や技術を創出",
+                    category: "研究・技術",
+                    traits: { education: 8, introvert: 8, analytical: 9, specialized: 9, impact: 8, specialist: 9, low_pressure: 8 }
+                },
+                {
+                    title: "図書館司書",
+                    icon: "📚",
+                    description: "図書館の運営と利用者の学習・研究活動をサポート",
+                    category: "教育・サービス",
+                    traits: { education: 8, introvert: 7, practical: 7, office: 8, stability: 8, supporter: 8, low_pressure: 9 }
+                },
+                
+                // クリエイティブ系
+                {
+                    title: "グラフィックデザイナー",
+                    icon: "🎨",
+                    description: "視覚的なデザインで情報やメッセージを効果的に伝達",
+                    category: "クリエイティブ",
+                    traits: { creative: 9, introvert: 6, creative: 9, remote: 8, creativity: 9, specialist: 8, moderate: 7 }
+                },
+                {
+                    title: "イラストレーター",
+                    icon: "✏️",
+                    description: "絵やイラストで表現し、様々なメディアで作品を提供",
+                    category: "クリエイティブ",
+                    traits: { creative: 9, introvert: 8, creative: 9, remote: 9, creativity: 9, specialist: 8, low_pressure: 8 }
+                },
+                {
+                    title: "映像クリエイター",
+                    icon: "🎬",
+                    description: "動画や映像コンテンツの企画・制作・編集を担当",
+                    category: "クリエイティブ",
+                    traits: { creative: 9, balanced: 7, creative: 8, remote: 7, creativity: 9, specialist: 8, high_pressure: 7 }
+                },
+                {
+                    title: "音楽クリエイター",
+                    icon: "🎵",
+                    description: "楽曲制作や音響効果で感動や体験を創造",
+                    category: "クリエイティブ",
+                    traits: { creative: 9, introvert: 7, creative: 9, specialized: 8, creativity: 9, specialist: 9, moderate: 8 }
+                },
+                {
+                    title: "作家・編集者",
+                    icon: "📝",
+                    description: "文章や書籍を通じて情報や物語を伝える",
+                    category: "クリエイティブ",
+                    traits: { creative: 8, introvert: 8, creative: 8, remote: 9, creativity: 9, specialist: 8, low_pressure: 8 }
+                },
+                
+                // ビジネス・営業系
+                {
+                    title: "営業職",
+                    icon: "📞",
+                    description: "顧客との関係構築により商品・サービスの販売を推進",
+                    category: "営業・販売",
+                    traits: { business: 8, extrovert: 9, collaborative: 8, fieldwork: 9, growth: 8, generalist: 8, high_pressure: 8 }
+                },
+                {
+                    title: "マーケティングスペシャリスト",
+                    icon: "📢",
+                    description: "市場分析と戦略立案で商品・サービスの価値を向上",
+                    category: "マーケティング",
+                    traits: { business: 8, balanced: 7, analytical: 7, office: 7, growth: 8, specialist: 7, moderate: 8 }
+                },
+                {
+                    title: "コンサルタント",
+                    icon: "💼",
+                    description: "専門知識で企業の課題解決と成長をサポート",
+                    category: "コンサルティング",
+                    traits: { business: 9, extrovert: 8, analytical: 8, fieldwork: 7, growth: 9, specialist: 8, high_pressure: 9 }
+                },
+                {
+                    title: "プロジェクトマネージャー",
+                    icon: "📋",
+                    description: "プロジェクト全体を統括し、目標達成へ導く",
+                    category: "マネジメント",
+                    traits: { business: 7, extrovert: 8, collaborative: 9, office: 8, growth: 8, leader: 9, high_pressure: 8 }
+                },
+                
+                // 事務・管理系
+                {
+                    title: "一般事務員",
+                    icon: "📄",
+                    description: "書類作成や データ管理で組織の運営をサポート",
+                    category: "事務・管理",
+                    traits: { business: 6, introvert: 6, practical: 8, office: 9, stability: 9, supporter: 8, low_pressure: 8 }
+                },
+                {
+                    title: "経理・会計士",
+                    icon: "💰",
+                    description: "財務データの管理と分析で企業の経営をサポート",
+                    category: "財務・会計",
+                    traits: { business: 8, introvert: 7, analytical: 9, office: 9, stability: 8, specialist: 8, moderate: 7 }
+                },
+                {
+                    title: "人事担当者",
+                    icon: "👥",
+                    description: "採用から育成まで人材に関する業務を担当",
+                    category: "人事・労務",
+                    traits: { people: 8, extrovert: 7, collaborative: 8, office: 8, impact: 7, generalist: 8, moderate: 7 }
+                },
+                {
+                    title: "秘書",
+                    icon: "📅",
+                    description: "管理職のスケジュール管理と業務サポート",
+                    category: "事務・サポート",
+                    traits: { business: 6, balanced: 7, practical: 8, office: 9, stability: 8, supporter: 9, moderate: 8 }
+                },
+                
+                // サービス・接客系
+                {
+                    title: "美容師",
+                    icon: "💇‍♀️",
+                    description: "ヘアカットやスタイリングで顧客の美しさを演出",
+                    category: "美容・サービス",
+                    traits: { people: 8, extrovert: 8, creative: 7, specialized: 8, creativity: 8, specialist: 8, moderate: 7 }
+                },
+                {
+                    title: "調理師・シェフ",
+                    icon: "👨‍🍳",
+                    description: "料理の調理と新メニュー開発で食の喜びを提供",
+                    category: "料理・サービス",
+                    traits: { creative: 7, balanced: 7, creative: 8, specialized: 8, creativity: 8, specialist: 8, high_pressure: 8 }
+                },
+                {
+                    title: "販売員",
+                    icon: "🛍️",
+                    description: "商品知識と接客スキルで顧客満足を実現",
+                    category: "販売・小売",
+                    traits: { people: 9, extrovert: 9, collaborative: 7, fieldwork: 7, stability: 7, supporter: 7, moderate: 7 }
+                },
+                {
+                    title: "ホテルスタッフ",
+                    icon: "🏨",
+                    description: "宿泊サービスを通じて快適な滞在を提供",
+                    category: "ホスピタリティ",
+                    traits: { people: 9, extrovert: 8, collaborative: 8, specialized: 7, impact: 7, supporter: 8, high_pressure: 7 }
+                },
+                {
+                    title: "ウェディングプランナー",
+                    icon: "💒",
+                    description: "結婚式の企画・運営で特別な日を演出",
+                    category: "イベント・サービス",
+                    traits: { people: 8, extrovert: 8, creative: 8, fieldwork: 8, creativity: 8, generalist: 8, high_pressure: 8 }
+                },
+                
+                // 公務・法律系
+                {
+                    title: "公務員",
+                    icon: "🏛️",
+                    description: "行政サービスを通じて社会の安定と発展に貢献",
+                    category: "公務",
+                    traits: { business: 6, balanced: 7, practical: 8, office: 8, stability: 9, supporter: 8, low_pressure: 8 }
+                },
+                {
+                    title: "警察官",
+                    icon: "👮‍♂️",
+                    description: "治安維持と市民の安全を守る重要な使命",
+                    category: "公安・治安",
+                    traits: { people: 7, extrovert: 7, practical: 8, fieldwork: 9, impact: 9, leader: 7, high_pressure: 9 }
+                },
+                {
+                    title: "消防士",
+                    icon: "🚒",
+                    description: "火災や災害から人々の生命と財産を守る",
+                    category: "公安・救急",
+                    traits: { people: 8, extrovert: 7, practical: 9, fieldwork: 9, impact: 9, leader: 7, high_pressure: 9 }
+                },
+                {
+                    title: "弁護士",
+                    icon: "⚖️",
+                    description: "法律の専門知識で正義と権利を守る",
+                    category: "法律・司法",
+                    traits: { business: 8, balanced: 7, analytical: 9, office: 7, impact: 8, specialist: 9, high_pressure: 9 }
+                },
+                
+                // 技能・技術系
+                {
+                    title: "建築士",
+                    icon: "🏗️",
+                    description: "建物の設計と監理で安全で美しい空間を創造",
+                    category: "建築・設計",
+                    traits: { creative: 7, introvert: 6, analytical: 8, specialized: 8, creativity: 7, specialist: 9, moderate: 8 }
+                },
+                {
+                    title: "電気工事士",
+                    icon: "⚡",
+                    description: "電気設備の設置と保守で社会インフラを支える",
+                    category: "技能・工事",
+                    traits: { technology: 7, introvert: 6, practical: 9, fieldwork: 8, stability: 8, specialist: 8, moderate: 7 }
+                },
+                {
+                    title: "大工",
+                    icon: "🔨",
+                    description: "木材加工と建築技術で住まいづくりに貢献",
+                    category: "建築・技能",
+                    traits: { creative: 6, introvert: 6, practical: 9, fieldwork: 9, stability: 7, specialist: 8, moderate: 7 }
+                },
+                {
+                    title: "機械設計技術者",
+                    icon: "⚙️",
+                    description: "機械装置の設計と開発で産業の発展に貢献",
+                    category: "技術・設計",
+                    traits: { technology: 8, introvert: 7, analytical: 9, specialized: 8, growth: 7, specialist: 9, moderate: 8 }
+                },
+                
+                // その他専門職
+                {
+                    title: "栄養士",
+                    icon: "🥗",
+                    description: "栄養学の知識で健康的な食生活をサポート",
+                    category: "健康・栄養",
+                    traits: { health: 8, balanced: 7, analytical: 7, specialized: 8, impact: 8, specialist: 7, moderate: 7 }
+                },
+                {
+                    title: "スポーツインストラクター",
+                    icon: "🏃‍♀️",
+                    description: "運動指導で健康増進とパフォーマンス向上をサポート",
+                    category: "スポーツ・健康",
+                    traits: { health: 8, extrovert: 9, practical: 8, specialized: 8, impact: 8, supporter: 8, moderate: 8 }
+                },
+                {
+                    title: "旅行代理店スタッフ",
+                    icon: "✈️",
+                    description: "旅行の企画と手配で素晴らしい体験を提供",
+                    category: "旅行・サービス",
+                    traits: { people: 8, extrovert: 8, collaborative: 7, office: 7, creativity: 7, generalist: 8, moderate: 7 }
+                },
+                {
+                    title: "金融アナリスト",
+                    icon: "📈",
+                    description: "市場分析と投資判断で資産運用をサポート",
+                    category: "金融・投資",
+                    traits: { business: 9, introvert: 6, analytical: 9, office: 8, growth: 8, specialist: 8, high_pressure: 8 }
+                }
+            ];
+
+            // スコア計算
+            const scoredCareers = careerDatabase.map(career => {
+                let score = 0;
+                let maxScore = 0;
+
+                // 各特性に対してスコアを計算
+                const weights = {
+                    interest: 3,
+                    personality: 2,
+                    problem_solving: 2,
+                    environment: 1.5,
+                    values: 2.5,
+                    workstyle: 2,
+                    stress: 1
+                };
+
+                // 興味分野のスコア
+                if (career.traits[interest]) {
+                    score += career.traits[interest] * weights.interest;
+                }
+                maxScore += 9 * weights.interest;
+
+                // 性格タイプのスコア
+                if (career.traits[personality]) {
+                    score += career.traits[personality] * weights.personality;
+                }
+                maxScore += 9 * weights.personality;
+
+                // 問題解決スタイルのスコア
+                if (career.traits[problem_solving]) {
+                    score += career.traits[problem_solving] * weights.problem_solving;
+                }
+                maxScore += 9 * weights.problem_solving;
+
+                // 仕事環境のスコア
+                if (career.traits[environment]) {
+                    score += career.traits[environment] * weights.environment;
+                }
+                maxScore += 9 * weights.environment;
+
+                // 価値観のスコア
+                if (career.traits[values]) {
+                    score += career.traits[values] * weights.values;
+                }
+                maxScore += 9 * weights.values;
+
+                // 働き方のスコア
+                if (career.traits[workstyle]) {
+                    score += career.traits[workstyle] * weights.workstyle;
+                }
+                maxScore += 9 * weights.workstyle;
+
+                // ストレス耐性のスコア
+                if (career.traits[stress]) {
+                    score += career.traits[stress] * weights.stress;
+                }
+                maxScore += 9 * weights.stress;
+
+                const match = Math.round((score / maxScore) * 100);
+                return { ...career, match };
+            });
+
+            // スコア順にソートして上位5つを返す
+            return scoredCareers
+                .sort((a, b) => b.match - a.match)
+                .slice(0, 5);
+        }
+
+        function resetTest() {
+            answers = {};
+            currentQuestion = 0;
+            
+            // プログレスバーをリセット
+            document.getElementById('progressFill').style.width = '0%';
+            
+            // すべてのノードを隠す
+            document.querySelectorAll('.node').forEach(node => {
+                node.style.display = 'none';
+                node.classList.remove('active');
+            });
+            
+            // スタートノードを表示
+            const startNode = document.getElementById('start');
+            startNode.style.display = 'block';
+            startNode.classList.add('active');
+            
+            // モバイル対応のスクロール
+            setTimeout(() => {
+                startNode.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center',
+                    inline: 'nearest'
+                });
+            }, 100);
+        }
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 最初はスタートノードのみ表示
+            document.querySelectorAll('.node:not(#start)').forEach(node => {
+                node.style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html>
+                
