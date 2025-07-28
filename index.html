@@ -4,6 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>総合適職診断フローチャート</title>
+    
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-BBY3JEMC7J"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-BBY3JEMC7J');
+      
+      // カスタムイベント追跡用関数
+      function trackEvent(action, category, label, value) {
+        gtag('event', action, {
+          'event_category': category,
+          'event_label': label,
+          'value': value
+        });
+      }
+    </script>
     <style>
         * {
             margin: 0;
@@ -587,7 +605,7 @@
                 <h3>総合適職診断を始めましょう！</h3>
                 <p>7つの質問に答えて、50以上の職業からあなたの理想的な職業を見つけましょう。</p>
                 <div class="options">
-                    <button class="option-btn" onclick="nextQuestion('q1')">📋 診断を開始する</button>
+                    <button class="option-btn" onclick="startDiagnosis()">📋 診断を開始する</button>
                 </div>
             </div>
 
@@ -788,6 +806,9 @@
         function setAnswer(category, value) {
             answers[category] = value;
             console.log('現在の回答:', answers);
+            
+            // Google Analytics: 回答選択追跡
+            trackEvent('answer_selected', 'diagnosis', `${category}_${value}`, 1);
         }
 
         function nextQuestion(questionId) {
@@ -810,6 +831,9 @@
             // プログレスバーを更新
             currentQuestion++;
             updateProgress();
+
+            // Google Analytics: 質問進行追跡
+            trackEvent('question_progress', 'diagnosis', `question_${currentQuestion}`, currentQuestion);
 
             // スムーズスクロール（モバイル対応）
             setTimeout(() => {
@@ -838,6 +862,13 @@
 
             // 結果を計算
             const careers = calculateCareer();
+            
+            // Google Analytics: 診断完了追跡
+            trackEvent('diagnosis_completed', 'conversion', 'career_test_complete', 1);
+            
+            // 最適職業の追跡
+            const topCareer = careers[0];
+            trackEvent('result_shown', 'diagnosis', `top_career_${topCareer.category}`, topCareer.match);
             
             // 結果を表示
             const resultNode = document.getElementById('result');
@@ -1271,6 +1302,9 @@
             answers = {};
             currentQuestion = 0;
             
+            // Google Analytics: リセット追跡
+            trackEvent('test_reset', 'engagement', 'restart_diagnosis', 1);
+            
             // プログレスバーをリセット
             document.getElementById('progressFill').style.width = '0%';
             
@@ -1301,8 +1335,16 @@
             document.querySelectorAll('.node:not(#start)').forEach(node => {
                 node.style.display = 'none';
             });
+            
+            // Google Analytics: ページ読み込み追跡
+            trackEvent('page_loaded', 'engagement', 'career_test_landing', 1);
         });
+
+        // 診断開始トラッキング用の関数追加
+        function startDiagnosis() {
+            trackEvent('diagnosis_started', 'engagement', 'career_test_start', 1);
+            nextQuestion('q1');
+        }
     </script>
 </body>
 </html>
-                
